@@ -1,0 +1,49 @@
+/*-- scss:defaults --*/
+$navbar-bg: #5c32a8;
+$navbar-fg: #ffffff;
+$navbar-hl: #ffffff;
+
+// fonts
+@import url(https://fonts.googleapis.com/css?family=Source+Sans+3:300,300i,400,400i);
+$font-family-sans-serif: "Source Sans 3", sans-serif !default;
+
+/*-- scss:rules --*/
+.card-header {
+  background-color: #EEF3F6;
+}
+
+.nav-item > a:hover {
+  color: #86C7ED;
+}
+
+.nav-link{
+  color: #ffffff;
+}
+.main-content, .dashboard-page {
+  min-height: 1000px; // or any value you prefer
+}
+
+
+@media (max-width: 900px) {
+  .main-content, .dashboard-page {
+    padding-left: 8px;
+    padding-right: 8px;
+    max-width: 100%;
+  }
+  .dashboard-row, .row {
+    flex-direction: column !important;
+    margin-bottom: 16px;
+  }
+  .valuebox, .card {
+    margin-right: 0;
+    margin-bottom: 16px;
+    width: 100%;
+  }
+  .navbar {
+    font-size: 1em;
+  }
+  /* Reduce font size for charts/titles if needed */
+  h1, h2, h3 {
+    font-size: 1.2em;
+  }
+}

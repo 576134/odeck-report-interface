@@ -1,0 +1,6 @@
+env/
+*.pyc
+*.html
+*_files/
+.Rproj.user/
+

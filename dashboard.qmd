@@ -1,0 +1,140 @@
+---
+title: "Stages Dashboard"
+format: dashboard
+#logo: images/logo.png
+theme: custom.scss
+params:
+  repo_name: ""
+---
+
+```{python}
+#| tags: [parameters]
+# to render w/ a different product type:
+# quarto render dashboard.qmd -P product_type:Premium
+
+product_type = "Standard"
+```
+
+```{python}
+import pandas as pd
+from helpers import color_palette, plot_churn_reason, plot_contract_type, table_purchases
+from matplotlib import rcParams
+from itables import show
+import matplotlib.pyplot as plt
+import numpy as np
+
+rcParams.update({"savefig.bbox": "tight"})
+
+
+churn_reason = pd.read_csv("data/churn_reason.csv")
+
+```
+
+# Stages Display
+
+<span style="font-size:1.5em; background-color:#e8e6dc; padding:4px 12px; border-radius:6px; font-weight:bold;">
+  Organization: maximus-codeshuttle
+</span>
+
+## Row
+
+```{python}
+#| content: valuebox
+#| title: "Number of Repositories"
+dict(
+  icon = "archive",
+  color = "light",
+  value = "4"
+)
+```
+
+```{python}
+#| content: valuebox
+#| title: "Number of Branches"
+dict(
+  icon = "diagram-2",
+  color = "light",
+  value = "9"
+)
+```
+
+```{python}
+#| content: valuebox
+#| title: "Number of Success Branches"
+dict(
+  icon = "cart-check",
+  color = "warning",
+  value = "89%"
+)
+```
+
+## Row {height="60%"}
+
+```{python}
+#| title: Overall Test Configuration Overview
+y = np.array([75,25])
+mylabels = ["Enabled","Disabled"]
+myexplode = [0,0.2]
+
+#plot_churn_reason(churn_reason, product_type)
+plt.pie(
+  y,
+  labels=mylabels, 
+  explode=myexplode, 
+  shadow=True,
+  autopct='%1.1f%%',
+  textprops={'fontsize': 16} 
+  )
+plt.show();
+
+```
+
+
+```{python}
+#| title: Percent of Security Features Disabled
+stages = ['Quality','SAST Check', 'Smoke', 'Unit Test', 'Dependency Track', 'SonarQube', 'ICS']
+percents = [0.1, 0.5, 0.9, 0.2, 0, 0.4, 0.8]
+
+plt.bar(stages,percents, color='#c9654f')
+plt.xticks(rotation=30, fontsize=14)
+plt.yticks(fontsize=14)
+plt.xlabel('Security Feature', fontsize=16)
+plt.ylabel('Percent', fontsize=18)
+plt.show();
+```
+
+## Row
+<span style="font-size:1.2em; background-color:#edd968; padding:4px 12px; border-radius:6px; font-weight:bold;">
+  By not enabling security features you subject your self to increase risk of data breaches, unauthorized access, and potential loss of sensitive information--please proceed at your own risk.
+</span>
+
+## Row
+
+```{python}
+from IPython.display import Markdown
+#| title: Time and Version of Each Pipeline
+df = pd.read_csv('data/time_version.csv')
+Markdown(df.to_markdown(index=False))
+
+```
+
+# Data 
+
+```{python}
+
+import pandas as pd
+from itables import show
+try:
+    repo_name = params["repo_name"]
+except (NameError, KeyError):
+    repo_name = ""
+df = pd.read_csv("data/full_info.csv")
+
+if repo_name:
+    filtered = df[df["repository"].str.contains(repo_name, case=False, na=False)]
+else:
+    filtered = df
+
+show(filtered)
+```
+
