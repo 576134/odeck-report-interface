@@ -13,20 +13,33 @@ params:
 # quarto render dashboard.qmd -P product_type:Premium
 
 product_type = "Standard"
+
+
+def enabled_calc(feature):
+  df = pd.read_csv('data/full_info.csv')
+  total = len(df)
+  enabled_count = (df[feature] == 'enabled').sum()
+
+  if total > 0:
+    enabled_percentage = round((enabled_count/total), 2)
+  else:
+    enabled_percentage = 0
+
+  return enabled_percentage
+
+
 ```
 
 ```{python}
 import pandas as pd
-from helpers import color_palette, plot_churn_reason, plot_contract_type, table_purchases
 from matplotlib import rcParams
-from itables import show
+import itables as itables
 import matplotlib.pyplot as plt
 import numpy as np
 
+df_full_info = pd.read_csv('data/full_info.csv')
 rcParams.update({"savefig.bbox": "tight"})
 
-
-churn_reason = pd.read_csv("data/churn_reason.csv")
 
 ```
 
@@ -60,30 +73,52 @@ dict(
 
 ```{python}
 #| content: valuebox
-#| title: "Number of Success Branches"
+#| title: "Pipeline Successful Completion Rate"
+
+df = pd.read_csv('data/full_info.csv')
+total = len(df)
+print(f"Total: {total}")
+success_count = (df['Status'] == 'SUCCESS').sum()
+
+if total > 0:
+    success_percentage = round((success_count/total) * 100, 2)
+    print(f"success percentage: {success_percentage:.2f}%")
+else:
+    success_percentage = 0
+    print("No data available to calculate success percentage.")
+
+
+#success_percentage = (success_count / total) * 100
+
 dict(
-  icon = "cart-check",
+  icon = "rocket-takeoff",
   color = "warning",
-  value = "89%"
+  value=f"{success_percentage}%"
 )
 ```
 
-## Row {height="60%"}
+## Row 
 
 ```{python}
-#| title: Overall Test Configuration Overview
-y = np.array([75,25])
+#| title: Total Security Features Enable/Disable Across All Repositories
+
+
+
+enabled_percent = round((enabled_calc('Quality') + enabled_calc('SAST Check') + enabled_calc('Smoke') + enabled_calc('Unit Test') + enabled_calc('Dependency Track') + enabled_calc('SonarQube') + enabled_calc('ICS')) / 7 , 2)
+disabled_percent = 1-enabled_percent 
+y = np.array([enabled_percent,disabled_percent])
+#y = np.array([80,20])
 mylabels = ["Enabled","Disabled"]
 myexplode = [0,0.2]
 
-#plot_churn_reason(churn_reason, product_type)
+
 plt.pie(
   y,
   labels=mylabels, 
   explode=myexplode, 
   shadow=True,
   autopct='%1.1f%%',
-  textprops={'fontsize': 16} 
+  textprops={'fontsize': 20} 
   )
 plt.show();
 
@@ -91,15 +126,27 @@ plt.show();
 
 
 ```{python}
-#| title: Percent of Security Features Disabled
-stages = ['Quality','SAST Check', 'Smoke', 'Unit Test', 'Dependency Track', 'SonarQube', 'ICS']
-percents = [0.1, 0.5, 0.9, 0.2, 0, 0.4, 0.8]
+#| title: Percent of Security Features Enabled Across All Repositories
 
-plt.bar(stages,percents, color='#c9654f')
-plt.xticks(rotation=30, fontsize=14)
+
+stages = ['Quality','SAST Check', 'Smoke', 'Unit Test', 'Trivi', 'SonarQube', 'ICS']
+bar_colors = ['#526dd1', '#36ad97', '#b56841', '#7bb84f', '#db9d39', '#542b6e', '#bf392a']
+
+wrapped_labels = [label.replace(" ", "\n", 1) for label in stages]
+
+percents = [int(enabled_calc('Quality')*100), int(enabled_calc('SAST Check')*100), int(enabled_calc('Smoke')*100), int(enabled_calc('Unit Test')*100), int(enabled_calc('Dependency Track')*100), int(enabled_calc('SonarQube')*100), int(enabled_calc('ICS')*100)]
+#'#34eb61'
+bars = plt.bar(wrapped_labels,percents, color=bar_colors)
+
+# Add number labels on top of each bar
+for bar in bars:
+  height = bar.get_height()
+  plt.text(bar.get_x() + bar.get_width()/2.0, height, f'{height}%', ha='center', va='bottom', fontsize=12)
+
+plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
-plt.xlabel('Security Feature', fontsize=16)
-plt.ylabel('Percent', fontsize=18)
+plt.xlabel('Security Feature', fontsize=18)
+plt.ylabel('Percent Enabled', fontsize=18)
 plt.show();
 ```
 
@@ -113,28 +160,26 @@ plt.show();
 ```{python}
 from IPython.display import Markdown
 #| title: Time and Version of Each Pipeline
-df = pd.read_csv('data/time_version.csv')
-Markdown(df.to_markdown(index=False))
+df = pd.read_csv('data/full_info.csv')
+
+time_version_col = df[['Branch', 'CodeShuttle version', 'Last pipeline run']]
+
+Markdown(time_version_col.to_markdown(index=False))
 
 ```
 
 # Data 
 
+## Row {height="60%"}
+
 ```{python}
+#| title: Data
 
-import pandas as pd
-from itables import show
-try:
-    repo_name = params["repo_name"]
-except (NameError, KeyError):
-    repo_name = ""
-df = pd.read_csv("data/full_info.csv")
 
-if repo_name:
-    filtered = df[df["repository"].str.contains(repo_name, case=False, na=False)]
-else:
-    filtered = df
+# Displaying the DataFrame as an interactive table with pagination using itables
+itables.options.classes = ["display", "table", "table-bordered", "table-striped"]
 
-show(filtered)
+
+#itables.show(df_full_info, scrollY="350px", scrollCollapse=True, paging=False)
+itables.show(df_full_info)
 ```
-
